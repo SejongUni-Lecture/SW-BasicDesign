@@ -1,10 +1,11 @@
-ï»¿#include<stdio.h>
+
+#include<stdio.h>
 #include<windows.h>
 #include<stdlib.h>
 #include<string.h>
 #include<conio.h>
-#include"Map.h" //ë§µ
-//#include"MiniGame.h" //ë¯¸ë‹ˆê²Œì„ í•¨ìˆ˜
+#include"Map.h" //¸Ê
+//#include"MiniGame.h" //¹Ì´Ï°ÔÀÓ ÇÔ¼ö
 
 #define UP 119 //W
 #define LEFT 97 //A
@@ -29,13 +30,13 @@
 #define MBOARD_ORIGIN_X 5
 #define MBOARD_ORIGIN_Y 22
 
-int gameBoardInfo[GBOARD_HEIGHT + 1][GBOARD_WIDTH + 2];		//ì¸í„°í˜ì´ìŠ¤ ì¤‘ ê²Œì„ ì‹¤í–‰ì°½ì— í•´ë‹¹ë˜ëŠ” ë¶€ë¶„
+int gameBoardInfo[GBOARD_HEIGHT + 1][GBOARD_WIDTH + 2];		//ÀÎÅÍÆäÀÌ½º Áß °ÔÀÓ ½ÇÇàÃ¢¿¡ ÇØ´çµÇ´Â ºÎºĞ
 int itemBoardInfo[IBOARD_HEIGHT + 1][IBOARD_WIDTH + 2];
 int messageBoardInfo[MBOARD_HEIGHT + 1][MBOARD_WIDTH + 2];
 
-COORD player = { 46, 14 }; //xì¢Œí‘œ ì§ìˆ˜ë¡œ ì„¤ì •(í™€ìˆ˜ëŠ” ì¶©ëŒì²´í¬ ì”¹í˜)
-int currentRoomNumber = 10; //í˜„ì¬ í”Œë ˆì´ì–´ê°€ ìˆëŠ” ë°© ë²ˆí˜¸
-int mapSize[10][2]; //ê° ë°©ì˜ ê°€ë¡œ,ì„¸ë¡œ í¬ê¸° ì €ì¥
+COORD player = { 42, 9 }; //xÁÂÇ¥ Â¦¼ö·Î ¼³Á¤(È¦¼ö´Â Ãæµ¹Ã¼Å© ¾ÃÈû)
+int currentRoomNumber = 5; //ÇöÀç ÇÃ·¹ÀÌ¾î°¡ ÀÖ´Â ¹æ ¹øÈ£
+int mapSize[10][2]; //°¢ ¹æÀÇ °¡·Î,¼¼·Î Å©±â ÀúÀå
 int LifeLimit = 2;
 
 void SetCurrentCursorPos(int x, int y)
@@ -63,7 +64,7 @@ void RemoveCursor()
 }
 
 int DetectCollision(int posX, int posY, char Map[][17][36]) {
-	//ì¶©ëŒì‹œ ë°˜í™˜ê°’: 0
+	//Ãæµ¹½Ã ¹İÈ¯°ª: 0
 
 	if (Map[currentRoomNumber][posY - GBOARD_ORIGIN_Y - 2][(posX - GBOARD_ORIGIN_X - 9) / 2] != 0) {
 		return 0;
@@ -72,94 +73,106 @@ int DetectCollision(int posX, int posY, char Map[][17][36]) {
 	return 1;
 }
 
-void Interface()				// ê²Œì„ ì „ì²´ ì¸í„°í˜ì´ìŠ¤ë¥¼ ê·¸ë¦¬ëŠ” í•¨ìˆ˜
+void Interface()				// °ÔÀÓ ÀüÃ¼ ÀÎÅÍÆäÀÌ½º¸¦ ±×¸®´Â ÇÔ¼ö
 {
 	int x, y;
-	//ê²Œì„ ì‹¤í–‰ ì¸í„°í˜ì´ìŠ¤
+	//°ÔÀÓ ½ÇÇà ÀÎÅÍÆäÀÌ½º
 	for (y = 0; y <= GBOARD_HEIGHT; y++)
 	{
 		SetCurrentCursorPos(GBOARD_ORIGIN_X, GBOARD_ORIGIN_Y + y);
-		if (y == 0) printf("â”Œ");
-		else if (y == GBOARD_HEIGHT) printf("â””");
-		else printf("â”‚");
+		if (y == 0) printf("¦£");
+		else if (y == GBOARD_HEIGHT) printf("¦¦");
+		else printf("¦¢");
 	}
 	for (y = 0; y <= GBOARD_HEIGHT; y++)
 	{
 		SetCurrentCursorPos(GBOARD_ORIGIN_X + (GBOARD_WIDTH + 1) * 2, GBOARD_ORIGIN_Y + y);
-		if (y == 0) printf("â”");
-		else if (y == GBOARD_HEIGHT) printf("â”˜");
-		else printf("â”‚");
+		if (y == 0) printf("¦¤");
+		else if (y == GBOARD_HEIGHT) printf("¦¥");
+		else printf("¦¢");
 	}
 	for (x = 1; x < (GBOARD_WIDTH + 1) * 2; x++)
 	{
 		SetCurrentCursorPos(GBOARD_ORIGIN_X + x, GBOARD_ORIGIN_Y + GBOARD_HEIGHT);
-		//ì™œ ì´ë ‡ê²Œ ì„¤ì •í•˜ëŠ” ê²ƒì¼ê¹Œ?: ì¼ë‹¨ ìœ„ì—ì„œ ã„´ì ëª¨í˜• ì…ë ¥ìœ¼ë¡œ x=1ë¶€í„° ì‹œì‘í•˜ê²Œ ëœë‹¤.
-		//í˜„ì¬ ì»¤ì„œì˜ ìƒíƒœëŠ” ORIGIN_Xë¡œ ë¶€í„° ë–¨ì–´ì ¸ìˆìœ¼ë©°, 
-		printf("â”€");
+		//¿Ö ÀÌ·¸°Ô ¼³Á¤ÇÏ´Â °ÍÀÏ±î?: ÀÏ´Ü À§¿¡¼­ ¤¤ÀÚ ¸ğÇü ÀÔ·ÂÀ¸·Î x=1ºÎÅÍ ½ÃÀÛÇÏ°Ô µÈ´Ù.
+		//ÇöÀç Ä¿¼­ÀÇ »óÅÂ´Â ORIGIN_X·Î ºÎÅÍ ¶³¾îÁ®ÀÖÀ¸¸ç, 
+		printf("¦¡");
 	}
 	for (x = 1; x < (GBOARD_WIDTH + 1) * 2; x++)
 	{
 		SetCurrentCursorPos(GBOARD_ORIGIN_X + x, GBOARD_ORIGIN_Y);
-		printf("â”€");
+		printf("¦¡");
 	}
-	//ì•„ì´í…œì°½ ì¸í„°í˜ì´ìŠ¤
+	//¾ÆÀÌÅÛÃ¢ ÀÎÅÍÆäÀÌ½º
 	for (y = 0; y <= IBOARD_HEIGHT; y++)
 	{
 		SetCurrentCursorPos(IBOARD_ORIGIN_X, IBOARD_ORIGIN_Y + y);
-		if (y == 0) printf("â”Œ");
-		else if (y == IBOARD_HEIGHT) printf("â””");
-		else printf("â”‚");
+		if (y == 0) printf("¦£");
+		else if (y == IBOARD_HEIGHT) printf("¦¦");
+		else printf("¦¢");
 	}
 	for (y = 0; y <= IBOARD_HEIGHT; y++)
 	{
 		SetCurrentCursorPos(IBOARD_ORIGIN_X + (IBOARD_WIDTH + 1) * 2, IBOARD_ORIGIN_Y + y);
-		if (y == 0) printf("â”");
-		else if (y == IBOARD_HEIGHT) printf("â”˜");
-		else printf("â”‚");
+		if (y == 0) printf("¦¤");
+		else if (y == IBOARD_HEIGHT) printf("¦¥");
+		else printf("¦¢");
 	}
 	for (x = 1; x < (IBOARD_WIDTH + 1) * 2; x++)
 	{
 		SetCurrentCursorPos(IBOARD_ORIGIN_X + x, IBOARD_ORIGIN_Y + IBOARD_HEIGHT);
-		//ì™œ ì´ë ‡ê²Œ ì„¤ì •í•˜ëŠ” ê²ƒì¼ê¹Œ?: ì¼ë‹¨ ìœ„ì—ì„œ ã„´ì ëª¨í˜• ì…ë ¥ìœ¼ë¡œ x=1ë¶€í„° ì‹œì‘í•˜ê²Œ ëœë‹¤.
-		//í˜„ì¬ ì»¤ì„œì˜ ìƒíƒœëŠ” ORIGIN_Xë¡œ ë¶€í„° ë–¨ì–´ì ¸ìˆìœ¼ë©°, 
-		printf("â”€");
+		//¿Ö ÀÌ·¸°Ô ¼³Á¤ÇÏ´Â °ÍÀÏ±î?: ÀÏ´Ü À§¿¡¼­ ¤¤ÀÚ ¸ğÇü ÀÔ·ÂÀ¸·Î x=1ºÎÅÍ ½ÃÀÛÇÏ°Ô µÈ´Ù.
+		//ÇöÀç Ä¿¼­ÀÇ »óÅÂ´Â ORIGIN_X·Î ºÎÅÍ ¶³¾îÁ®ÀÖÀ¸¸ç, 
+		printf("¦¡");
 	}
 	for (x = 1; x < (IBOARD_WIDTH + 1) * 2; x++)
 	{
 		SetCurrentCursorPos(IBOARD_ORIGIN_X + x, IBOARD_ORIGIN_Y);
-		printf("â”€");
+		printf("¦¡");
 	}
-	//ë©”ì„¸ì§€ì°½ ì¸í„°í˜ì´ìŠ¤ 
+	//¸Ş¼¼ÁöÃ¢ ÀÎÅÍÆäÀÌ½º 
+	
 	for (y = 0; y <= MBOARD_HEIGHT; y++)
 	{
 		SetCurrentCursorPos(MBOARD_ORIGIN_X, MBOARD_ORIGIN_Y + y);
-		if (y == 0) printf("â”Œ");
-		else if (y == MBOARD_HEIGHT) printf("â””");
-		else printf("â”‚");
+		if (y == 0) printf("¦£");
+		else if (y == MBOARD_HEIGHT) printf("¦¦");
+		else printf("¦¢");
 	}
 	for (y = 0; y <= MBOARD_HEIGHT; y++)
 	{
 		SetCurrentCursorPos(MBOARD_ORIGIN_X + (MBOARD_WIDTH + 1) * 2, MBOARD_ORIGIN_Y + y);
-		if (y == 0) printf("â”");
-		else if (y == MBOARD_HEIGHT) printf("â”˜");
-		else printf("â”‚");
+		if (y == 0) printf("¦¤");
+		else if (y == MBOARD_HEIGHT) printf("¦¥");
+		else printf("¦¢");
 	}
 	for (x = 1; x < (MBOARD_WIDTH + 1) * 2; x++)
 	{
 		SetCurrentCursorPos(MBOARD_ORIGIN_X + x, MBOARD_ORIGIN_Y + MBOARD_HEIGHT);
-		//ì™œ ì´ë ‡ê²Œ ì„¤ì •í•˜ëŠ” ê²ƒì¼ê¹Œ?: ì¼ë‹¨ ìœ„ì—ì„œ ã„´ì ëª¨í˜• ì…ë ¥ìœ¼ë¡œ x=1ë¶€í„° ì‹œì‘í•˜ê²Œ ëœë‹¤.
-		//í˜„ì¬ ì»¤ì„œì˜ ìƒíƒœëŠ” ORIGIN_Xë¡œ ë¶€í„° ë–¨ì–´ì ¸ìˆìœ¼ë©°, 
-		printf("â”€");
+		//¿Ö ÀÌ·¸°Ô ¼³Á¤ÇÏ´Â °ÍÀÏ±î?: ÀÏ´Ü À§¿¡¼­ ¤¤ÀÚ ¸ğÇü ÀÔ·ÂÀ¸·Î x=1ºÎÅÍ ½ÃÀÛÇÏ°Ô µÈ´Ù.
+		//ÇöÀç Ä¿¼­ÀÇ »óÅÂ´Â ORIGIN_X·Î ºÎÅÍ ¶³¾îÁ®ÀÖÀ¸¸ç, 
+		printf("¦¡");
 	}
 	for (x = 1; x < (MBOARD_WIDTH + 1) * 2; x++)
 	{
 		SetCurrentCursorPos(MBOARD_ORIGIN_X + x, MBOARD_ORIGIN_Y);
-		printf("â”€");
+		printf("¦¡");
 	}
 
-	//ë©”ì„¸ì§€ ì°½ í…ŒìŠ¤íŠ¸
+	//¸Ş¼¼Áö Ã¢ Å×½ºÆ®
 	SetCurrentCursorPos(MBOARD_ORIGIN_X + 2, MBOARD_ORIGIN_Y + 1);
-	printf("Hello");
+	/*for (x = 0; x < 36; x++) {
+		for (y = 0; y < 17; y++) {
+			
+		}
+	}*/
+	for (x = 0; x < 17; x++) {
+		for (y = 0; y < 36; y++) {
+			if (Map[currentRoomNumber][x][y] == 5) { printf(" %d %d %d %d", x,y, player.Y, player.X); break; }
+		}
+	}
+	//printf("%d", Map[currentRoomNumber][player.X+1][player.Y+5]);
+	//printf("Hello");
 	/*SetCurrentCursorPos(MBOARD_ORIGIN_X + 2, MBOARD_ORIGIN_Y + 2);
 	printf("Hello");
 	SetCurrentCursorPos(MBOARD_ORIGIN_X + 2, MBOARD_ORIGIN_Y + 3);
@@ -194,6 +207,8 @@ void Interface()				// ê²Œì„ ì „ì²´ ì¸í„°í˜ì´ìŠ¤ë¥¼ ê·¸ë¦¬ëŠ” í•¨ìˆ˜
 	{
 		messageBoardInfo[MBOARD_HEIGHT][x] = 1;
 	}
+
+	//SetCurrentCursorPos(0, 0);
 }
 
 void DrawGameUI(char Map[][17][36])
@@ -201,205 +216,205 @@ void DrawGameUI(char Map[][17][36])
 	int i, j;
 	for (i = 0; i < 36; i++) {
 		for (j = 0; j < 17; j++) {
-			if (currentRoomNumber == 0)//íŠœí† ë¦¬ì–¼
+			if (currentRoomNumber == 0)//Æ©Åä¸®¾ó
 			{
 				if (Map[currentRoomNumber][j][i] == 1) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//ì—¬ê¸°!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111 
-					//ë¸”ë¡ ë§ê³  ì„ ìœ¼ë¡œ ìˆ˜ì •í•˜ë ¤ë©´ ë¹¨ë¦¬ 9 ì–´ë–»ê²Œ í•´ê²°í•´ì•¼í•  ê²ƒ ê°™ìŒ-ì„œì˜
-					printf("â– ");
+					//¿©±â!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111 
+					//ºí·Ï ¸»°í ¼±À¸·Î ¼öÁ¤ÇÏ·Á¸é »¡¸® 9 ¾î¶»°Ô ÇØ°áÇØ¾ßÇÒ °Í °°À½-¼­¿µ
+					printf("¡á");
 				}
 				if (Map[currentRoomNumber][j][i] == 2) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//ìˆ˜ì •!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					printf("â–£");
+					//¼öÁ¤!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					printf("¢Ã");
 				}
 				if (Map[currentRoomNumber][j][i] == 3) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					//ì•„ì˜ˆ ë§µì„ ì •ì¤‘ì•™ì— ì˜¤ê²Œë” ë§Œë“¤ê¸´ í–ˆëŠ”ë° ì¡°ê¸ˆì˜ ìˆ˜ì •ë§Œ ë“¤ì–´ê°€ë©´ ë  ê²ƒ ê°™ìŒ.-ì„œì˜
-					printf("â™€");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					//¾Æ¿¹ ¸ÊÀ» Á¤Áß¾Ó¿¡ ¿À°Ô²û ¸¸µé±ä Çß´Âµ¥ Á¶±İÀÇ ¼öÁ¤¸¸ µé¾î°¡¸é µÉ °Í °°À½.-¼­¿µ
+					printf("¡Ï");
 				}
 			}
 
-			if (currentRoomNumber == 4) //4ë²ˆë°©
+			if (currentRoomNumber == 4) //4¹ø¹æ
 			{
 				if (Map[currentRoomNumber][j][i] == 1) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//ì—¬ê¸°!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111 
-					printf("â– ");
+					//¿©±â!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111 
+					printf("¡á");
 				}
 				if (Map[currentRoomNumber][j][i] == 2) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//ìˆ˜ì •!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					printf("Î“");
+					//¼öÁ¤!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					printf("¥Ã");
 				}
 				if (Map[currentRoomNumber][j][i] == 3) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					printf("â—");
+					printf("¡Ü");
 				}
 				if (Map[currentRoomNumber][j][i] == 4) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â—†");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¡ß");
 				}
 				if (Map[currentRoomNumber][j][i] == 5) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â—†");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¡ß");
 				}
 				if (Map[currentRoomNumber][j][i] == 6) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â—†");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¡ß");
 				}
 				if (Map[currentRoomNumber][j][i] == 7) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â—†");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¡ß");
 				}
 				if (Map[currentRoomNumber][j][i] == 8) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â—†");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¡ß");
 				}
 			}
 
-			if (currentRoomNumber == 5) //5ë²ˆë°©
+			if (currentRoomNumber == 5) //5¹ø¹æ
 			{
 				if (Map[currentRoomNumber][j][i] == 1) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//ì—¬ê¸°!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111 
-					printf("â– ");
+					//¿©±â!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111 
+					printf("¡á");
 				}
 				if (Map[currentRoomNumber][j][i] == 2) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//ìˆ˜ì •!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//¼öÁ¤!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
 					printf("@");
 				}
 				if (Map[currentRoomNumber][j][i] == 3) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					printf("â–¡");
+					printf("¡à");
 				}
 				if (Map[currentRoomNumber][j][i] == 4) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("Ğ¤");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¬¶");
 				}
 				if (Map[currentRoomNumber][j][i] == 5) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â–©");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¢Ì");
 				}
 				if (Map[currentRoomNumber][j][i] == 6) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â–¥");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¢È");
 				}
 				if (Map[currentRoomNumber][j][i] == 10) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â”Œ");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¦£");
 				}
 				if (Map[currentRoomNumber][j][i] == 11) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â”€");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¦¡");
 				}
 				if (Map[currentRoomNumber][j][i] == 12) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â”");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¦¤");
 				}
 				if (Map[currentRoomNumber][j][i] == 13) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â”‚");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¦¢");
 				}
 				if (Map[currentRoomNumber][j][i] == 14) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â””");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¦¦");
 				}
 				if (Map[currentRoomNumber][j][i] == 15) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â”˜");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¦¥");
 				}
 			}
 
-			if (currentRoomNumber == 7) //ë³µë„
+			if (currentRoomNumber == 7) //º¹µµ
 			{
 				if (Map[currentRoomNumber][j][i] == 1) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//ì—¬ê¸°!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111 
-					printf("â– ");
+					//¿©±â!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111 
+					printf("¡á");
 				}
 			}
 
-			if (currentRoomNumber == 10) //ê°ˆë˜ë°©
+			if (currentRoomNumber == 10) //°¥·¡¹æ
 			{
 				if (Map[currentRoomNumber][j][i] == 1) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//ì—¬ê¸°!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111 
-					printf("â– ");
+					//¿©±â!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111 
+					printf("¡á");
 				}
 				if (Map[currentRoomNumber][j][i] == 2) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â”Œ");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¦£");
 				}
 				if (Map[currentRoomNumber][j][i] == 3) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â”€");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¦¡");
 				}
 				if (Map[currentRoomNumber][j][i] == 4) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â”");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¦¤");
 				}
 				if (Map[currentRoomNumber][j][i] == 5) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â”‚");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¦¢");
 				}
 				if (Map[currentRoomNumber][j][i] == 6) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â””");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¦¦");
 				}
 				if (Map[currentRoomNumber][j][i] == 7) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â”˜");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¦¥");
 				}
 				if (Map[currentRoomNumber][j][i] == 8) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//í•„ìš”!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//ê° ë°©ë§ˆë‹¤ í¬ê¸°ê°€ ë‹¤ë¥´ë‹ˆ ì¤‘ì•™ì— ë°°ì¹˜í•˜ë„ë¡ ìˆ˜ì‹ì„ ë„£ì„ ì˜ˆì •ì…ë‹ˆë‹¹ -í˜œì›
-					printf("â”¬");
+					//ÇÊ¿ä!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//°¢ ¹æ¸¶´Ù Å©±â°¡ ´Ù¸£´Ï Áß¾Ó¿¡ ¹èÄ¡ÇÏµµ·Ï ¼ö½ÄÀ» ³ÖÀ» ¿¹Á¤ÀÔ´Ï´ç -Çı¿ø
+					printf("¦¨");
 				}
 
 			}
@@ -410,12 +425,13 @@ void DrawGameUI(char Map[][17][36])
 void ShiftLeft()
 {
 	if (!DetectCollision(player.X - 2, player.Y, Map)) {
-		if (Map[currentRoomNumber][player.X - 2][player.Y] != 1) {
-			//ë²½ì´ ì•„ë‹ˆë¼ ì•„ì´í…œì— ë¶€ë”ªí ê²½ìš°, ì‹œì•¼ì˜ ë°©í–¥ ì „í™˜ì´ ê°€ëŠ¥í•˜ë„ë¡ í•¨.
+		if (Map[currentRoomNumber][player.Y-4][(player.X-10-6)/2] != 1) {
+			//º®ÀÌ ¾Æ´Ï¶ó ¾ÆÀÌÅÛ¿¡ ºÎµúÈú °æ¿ì, ½Ã¾ßÀÇ ¹æÇâ ÀüÈ¯ÀÌ °¡´ÉÇÏµµ·Ï ÇÔ.
+		//	printf("2 %d %d %d", Map[currentRoomNumber][player.Y - 4][(player.X - 10 - 4) / 2], player.Y-4, (player.X - 10 - 4) / 2);
 			SetCurrentCursorPos(player.X, player.Y);
 			printf("  ");
 			SetCurrentCursorPos(player.X, player.Y);
-			printf("â—€");
+			printf("¢¸");
 		}
 		return 0;
 	}
@@ -424,18 +440,20 @@ void ShiftLeft()
 	printf("  ");
 	player.X -= 2;
 	SetCurrentCursorPos(player.X, player.Y);
-	printf("â—€");
+	printf("¢¸");
 }
 
 void ShiftRight()
 {
 	if (!DetectCollision(player.X + 2, player.Y, Map)) {
-		if (Map[currentRoomNumber][player.X + 2][player.Y] != 1) {
-			//ë²½ì´ ì•„ë‹ˆë¼ ì•„ì´í…œì— ë¶€ë”ªí ê²½ìš°, ì‹œì•¼ì˜ ë°©í–¥ ì „í™˜ì´ ê°€ëŠ¥í•˜ë„ë¡ í•¨.
+		//printf("1");
+		if (Map[currentRoomNumber][player.Y - 4][(player.X - 10 - 2)/2] != 1) {
+			//º®ÀÌ ¾Æ´Ï¶ó ¾ÆÀÌÅÛ¿¡ ºÎµúÈú °æ¿ì, ½Ã¾ßÀÇ ¹æÇâ ÀüÈ¯ÀÌ °¡´ÉÇÏµµ·Ï ÇÔ.
+		//	printf(" 2");
 			SetCurrentCursorPos(player.X, player.Y);
 			printf("  ");
 			SetCurrentCursorPos(player.X, player.Y);
-			printf("â–¶");
+			printf("¢º");
 		}
 		return 0;
 	}
@@ -444,18 +462,18 @@ void ShiftRight()
 	printf("  ");
 	player.X += 2;
 	SetCurrentCursorPos(player.X, player.Y);
-	printf("â–¶");
+	printf("¢º");
 }
 
 void ShiftUp()
 {
 	if (!DetectCollision(player.X, player.Y - 1, Map)) {
-		if (Map[currentRoomNumber][player.X][player.Y - 1] != 1) {
-			//ë²½ì´ ì•„ë‹ˆë¼ ì•„ì´í…œì— ë¶€ë”ªí ê²½ìš°, ì‹œì•¼ì˜ ë°©í–¥ ì „í™˜ì´ ê°€ëŠ¥í•˜ë„ë¡ í•¨.
+		if (Map[currentRoomNumber][player.Y - 5][(player.X-10-4)/2] != 1) {
+			//º®ÀÌ ¾Æ´Ï¶ó ¾ÆÀÌÅÛ¿¡ ºÎµúÈú °æ¿ì, ½Ã¾ßÀÇ ¹æÇâ ÀüÈ¯ÀÌ °¡´ÉÇÏµµ·Ï ÇÔ.
 			SetCurrentCursorPos(player.X, player.Y);
 			printf("  ");
 			SetCurrentCursorPos(player.X, player.Y);
-			printf("â–²");
+			printf("¡ã");
 		}
 		return 0;
 	}
@@ -464,18 +482,18 @@ void ShiftUp()
 	printf("  ");
 	player.Y -= 1;
 	SetCurrentCursorPos(player.X, player.Y);
-	printf("â–²");
+	printf("¡ã");
 }
 
 void ShiftDown()
 {
 	if (!DetectCollision(player.X, player.Y + 1, Map)) {
-		if (Map[currentRoomNumber][player.X][player.Y + 1] != 1) {
-			//ë²½ì´ ì•„ë‹ˆë¼ ì•„ì´í…œì— ë¶€ë”ªí ê²½ìš°, ì‹œì•¼ì˜ ë°©í–¥ ì „í™˜ì´ ê°€ëŠ¥í•˜ë„ë¡ í•¨.
+		if (Map[currentRoomNumber][player.Y - 3][(player.X - 10 - 4) / 2] != 1) {
+			//º®ÀÌ ¾Æ´Ï¶ó ¾ÆÀÌÅÛ¿¡ ºÎµúÈú °æ¿ì, ½Ã¾ßÀÇ ¹æÇâ ÀüÈ¯ÀÌ °¡´ÉÇÏµµ·Ï ÇÔ.
 			SetCurrentCursorPos(player.X, player.Y);
 			printf("  ");
 			SetCurrentCursorPos(player.X, player.Y);
-			printf("â–¼");
+			printf("¡å");
 		}
 		return 0;
 	}
@@ -483,7 +501,7 @@ void ShiftDown()
 	printf("  ");
 	player.Y += 1;
 	SetCurrentCursorPos(player.X, player.Y);
-	printf("â–¼");
+	printf("¡å");
 }
 
 void ProcessKeyInput()
@@ -512,18 +530,20 @@ void ProcessKeyInput()
 
 int main()
 {
-	system("title soRRow"); //ì½˜ì†”ì°½ ì œëª©
-	system("mode con cols=112 lines=33"); //ì½˜ì†”ì°½ í¬ê¸° ì¡°ì ˆ: cols=ì¹¸/í–‰(ê°€ë¡œ)   lines=ì¤„/ì—´(ì„¸ë¡œ)
+	system("title soRRow"); //ÄÜ¼ÖÃ¢ Á¦¸ñ
+	system("mode con cols=112 lines=33"); //ÄÜ¼ÖÃ¢ Å©±â Á¶Àı: cols=Ä­/Çà(°¡·Î)   lines=ÁÙ/¿­(¼¼·Î)
 	RemoveCursor();
 	GetCurrentCursorPos(player);
-	currentRoomNumber = 4; //í˜„ì¬ ë°© ë²ˆí˜¸
+	currentRoomNumber = 7; //ÇöÀç ¹æ ¹øÈ£
 	DrawGameUI(Map);
-	Interface();
 	SetCurrentCursorPos(player.X, player.Y);
-	printf("â–²");
-
+	printf("¡ã");
+	Interface();
+	
 	while (1) {
 		ProcessKeyInput();
+		if ((player.X == 48 && player.Y == 17) || (player.X == 50 && player.Y == 17)) {}
+
 	}
 	return 0;
 }
