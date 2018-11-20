@@ -34,7 +34,7 @@ int gameBoardInfo[GBOARD_HEIGHT + 1][GBOARD_WIDTH + 2];		//인터페이스 중 게임 실
 int itemBoardInfo[IBOARD_HEIGHT + 1][IBOARD_WIDTH + 2];
 int messageBoardInfo[MBOARD_HEIGHT + 1][MBOARD_WIDTH + 2];
 
-COORD player = { 42, 9 }; //x좌표 짝수로 설정(홀수는 충돌체크 씹힘)
+COORD player = { 50, 15 }; //x좌표 짝수로 설정(홀수는 충돌체크 씹힘)
 int currentRoomNumber = 5; //현재 플레이어가 있는 방 번호
 int mapSize[10][2]; //각 방의 가로,세로 크기 저장
 int LifeLimit = 2;
@@ -161,16 +161,7 @@ void Interface()				// 게임 전체 인터페이스를 그리는 함수
 
 	//메세지 창 테스트
 	SetCurrentCursorPos(MBOARD_ORIGIN_X + 2, MBOARD_ORIGIN_Y + 1);
-	/*for (x = 0; x < 36; x++) {
-		for (y = 0; y < 17; y++) {
-			
-		}
-	}*/
-	for (x = 0; x < 17; x++) {
-		for (y = 0; y < 36; y++) {
-			if (Map[currentRoomNumber][x][y] == 5) { printf(" %d %d %d %d", x,y, player.Y, player.X); break; }
-		}
-	}
+	printf("Hello");
 	//printf("%d", Map[currentRoomNumber][player.X+1][player.Y+5]);
 	//printf("Hello");
 	/*SetCurrentCursorPos(MBOARD_ORIGIN_X + 2, MBOARD_ORIGIN_Y + 2);
@@ -534,7 +525,7 @@ int main()
 	system("mode con cols=112 lines=33"); //콘솔창 크기 조절: cols=칸/행(가로)   lines=줄/열(세로)
 	RemoveCursor();
 	GetCurrentCursorPos(player);
-	currentRoomNumber = 7; //현재 방 번호
+	currentRoomNumber = 4; //현재 방 번호
 	DrawGameUI(Map);
 	SetCurrentCursorPos(player.X, player.Y);
 	printf("▲");
