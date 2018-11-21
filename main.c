@@ -1,10 +1,10 @@
-
 #include<stdio.h>
 #include<windows.h>
 #include<stdlib.h>
 #include<string.h>
 #include<conio.h>
 #include"Map.h" //맵
+#include "door.h"//각 방의 문 좌표
 //#include"MiniGame.h" //미니게임 함수
 
 #define UP 119 //W
@@ -34,7 +34,7 @@ int gameBoardInfo[GBOARD_HEIGHT + 1][GBOARD_WIDTH + 2];		//인터페이스 중 게임 실
 int itemBoardInfo[IBOARD_HEIGHT + 1][IBOARD_WIDTH + 2];
 int messageBoardInfo[MBOARD_HEIGHT + 1][MBOARD_WIDTH + 2];
 
-COORD player = { 50, 15 }; //x좌표 짝수로 설정(홀수는 충돌체크 씹힘)
+COORD player = { 48, 10 }; //x좌표 짝수로 설정(홀수는 충돌체크 씹힘)
 int currentRoomNumber = 5; //현재 플레이어가 있는 방 번호
 int mapSize[10][2]; //각 방의 가로,세로 크기 저장
 int LifeLimit = 2;
@@ -413,6 +413,121 @@ void DrawGameUI(char Map[][17][36])
 	}
 }
 
+void DeleteMap(int nextRoom) { //GBOARD에 출력된 내용을 전부 지운다.
+	int i, j;
+	COORD tmp;
+	char* playerICON = "▼";
+	
+	for (i = GBOARD_ORIGIN_X + 2; i < GBOARD_ORIGIN_X + 2 + GBOARD_WIDTH * 2; i++) {
+		for (j = GBOARD_ORIGIN_Y + 1; j < GBOARD_ORIGIN_Y + GBOARD_HEIGHT; j++) {
+			SetCurrentCursorPos(i, j);
+			printf(" ");
+		}
+	}
+
+	//Sleep(10);	
+	if (nextRoom == 7) {
+		//각 방에서 복도로 이동
+		tmp.X = entrance_door[currentRoomNumber][0];
+		tmp.Y = entrance_door[currentRoomNumber][1];
+
+		if (currentRoomNumber == 1 || currentRoomNumber == 2 || currentRoomNumber == 3) {
+			tmp.X += 2;
+			playerICON = "▶";
+		}
+		if (currentRoomNumber == 10 || currentRoomNumber == 6) {
+			tmp.X -= 2;
+			playerICON = "◀";
+		}
+	}
+
+	else if (nextRoom == 10) {
+		if (currentRoomNumber == 7) {
+			//7번방에서 갈래길(10번방)로 이동
+			tmp.X = exit_door[nextRoom][0];
+			tmp.Y = exit_door[nextRoom][1];
+			tmp.Y -= 1;
+			playerICON = "▲";
+		}
+		else if (currentRoomNumber == 4 || currentRoomNumber == 5) {
+			//4, 5번방에서 갈래길(10번방)로 이동
+			tmp.X = entrance_door[currentRoomNumber][0];
+			tmp.Y = entrance_door[currentRoomNumber][1];
+			if (currentRoomNumber == 4) {
+				tmp.X += 2;
+				playerICON = "▶";
+			}
+			if (currentRoomNumber == 5) {
+				tmp.X -= 2;
+				playerICON = "◀";
+			}
+		}
+	}
+	else {
+		//복도에서 각 방으로 이동
+		tmp.X = exit_door[nextRoom][0];
+		tmp.Y = exit_door[nextRoom][1];
+
+		if (nextRoom == 0) {
+			tmp.Y += 1;
+			playerICON = "▼";
+		}
+		if (nextRoom == 4 || nextRoom == 10) {
+			tmp.Y -= 1;
+			playerICON = "▲";
+		}
+		if (nextRoom == 5) {
+			tmp.X -= 2;
+			playerICON = "◀";
+		}
+	}
+
+	currentRoomNumber = nextRoom;
+	DrawGameUI(Map);
+	player.X = tmp.X;
+	player.Y = tmp.Y;
+	SetCurrentCursorPos(player.X, player.Y);
+	
+	printf("%s", playerICON);
+}
+
+void Check_exit_door() { //현재 플레이어의 위치가 방에서 나가는 좌표인지 검사
+
+	if ((player.X == exit_door[currentRoomNumber][0] && player.Y == exit_door[currentRoomNumber][1]) ||
+		(player.X == exit_door[currentRoomNumber][2] && player.Y == exit_door[currentRoomNumber][3])) 
+	{
+		if (currentRoomNumber == 4 || currentRoomNumber == 5) DeleteMap(10);
+		else DeleteMap(7); //복도에서의 좌표를 설정해 줌
+	}
+	
+}
+
+void Check_entrance_door() { //현재 플레이어의 위치가 방으로 들어가는 좌표인지 검사
+	int room_num[5] = { 1, 2, 3, 10, 6 }; //복도에서 들어갈 수 있는 방 번호
+	int i;
+	
+	if (currentRoomNumber == 10) {
+		if ((player.X == entrance_door[4][0] && player.Y == entrance_door[4][1]) ||
+			(player.X == entrance_door[4][2] && player.Y == entrance_door[4][3])) {
+			DeleteMap(4); //들어갈 방의 좌표를 설정해줌
+		}
+		if ((player.X == entrance_door[5][0] && player.Y == entrance_door[5][1]) ||
+			(player.X == entrance_door[5][2] && player.Y == entrance_door[5][3])) {
+			DeleteMap(5); //들어갈 방의 좌표를 설정해줌
+		}
+	}
+
+	else {
+		for (i = 0; i < 5; i++) {
+			if ((player.X == entrance_door[room_num[i]][0] && player.Y == entrance_door[room_num[i]][1]) ||
+				(player.X == entrance_door[room_num[i]][2] && player.Y == entrance_door[room_num[i]][3])) {
+				DeleteMap(room_num[i]); //들어갈 방의 좌표를 설정해줌
+				break;
+			}
+		}
+	}
+}
+
 void ShiftLeft()
 {
 	if (!DetectCollision(player.X - 2, player.Y, Map)) {
@@ -525,16 +640,16 @@ int main()
 	system("mode con cols=112 lines=33"); //콘솔창 크기 조절: cols=칸/행(가로)   lines=줄/열(세로)
 	RemoveCursor();
 	GetCurrentCursorPos(player);
-	currentRoomNumber = 4; //현재 방 번호
+	currentRoomNumber = 0; //현재 방 번호
 	DrawGameUI(Map);
 	SetCurrentCursorPos(player.X, player.Y);
 	printf("▲");
 	Interface();
 	
 	while (1) {
+		if (currentRoomNumber != 7) Check_exit_door();
+		if(currentRoomNumber==7 || currentRoomNumber==10) Check_entrance_door();
 		ProcessKeyInput();
-		if ((player.X == 48 && player.Y == 17) || (player.X == 50 && player.Y == 17)) {}
-
 	}
 	return 0;
 }
