@@ -5,7 +5,7 @@
 #include<conio.h>
 #include"Map.h" //맵
 #include "door.h"//각 방의 문 좌표
-//#include"MiniGame.h" //미니게임 함수
+#include "item.h"//아이템 정보 
 
 #define UP 119 //W
 #define LEFT 97 //A
@@ -30,14 +30,83 @@
 #define MBOARD_ORIGIN_X 5
 #define MBOARD_ORIGIN_Y 22
 
-int gameBoardInfo[GBOARD_HEIGHT + 1][GBOARD_WIDTH + 2];		//인터페이스 중 게임 실행창에 해당되는 부분
+int gameBoardInfo[GBOARD_HEIGHT + 1][GBOARD_WIDTH + 2];      //인터페이스 중 게임 실행창에 해당되는 부분
 int itemBoardInfo[IBOARD_HEIGHT + 1][IBOARD_WIDTH + 2];
 int messageBoardInfo[MBOARD_HEIGHT + 1][MBOARD_WIDTH + 2];
 
-COORD player = { 48, 10 }; //x좌표 짝수로 설정(홀수는 충돌체크 씹힘)
-int currentRoomNumber = 5; //현재 플레이어가 있는 방 번호
+COORD player = { 52, 17 }; //x좌표 짝수로 설정(홀수는 충돌체크 씹힘)
+int currentRoomNumber = 7; //현재 플레이어가 있는 방 번호
 int mapSize[10][2]; //각 방의 가로,세로 크기 저장
 int LifeLimit = 2;
+
+//New
+typedef struct Item_ListNode {
+	int item;
+	struct Item_ListNode* link;
+}LN;
+
+typedef struct HEAD {
+	LN* head;
+}Head;
+
+Head* L;
+
+Head* create_Linklist_h() {
+	Head* L;
+	L = (Head*)malloc(sizeof(Head));
+	L->head = NULL;
+}
+
+void insertNode(int key) {
+	LN* newNode;
+	LN* temp;
+	newNode = (LN*)malloc(sizeof(LN));
+	newNode->item = key;
+	newNode->link = NULL;
+	if (L->head == NULL) {
+		L->head = newNode;
+		return;
+	}
+	temp = L->head;
+	while (temp->link != NULL) {
+		temp = temp->link;
+	}
+	temp->link = newNode;
+}
+
+void DeleteNode(LN* p) {
+	LN* pre;
+	if (L->head == NULL) { return; }
+	if (L->head->link == NULL) {
+		free(L->head);
+		L->head = NULL;
+		return;
+	}
+	else if (p == NULL) { return; }
+	else {
+		pre = L->head;
+		while (pre->link != p) {
+			pre = pre->link;
+		}
+		pre->link = p->link;
+		free(p);
+	}
+}
+
+LN* searchNode(int item) {
+	LN* temp;
+	temp = L->head;
+	while (temp != NULL) {
+		if (temp->item == item) {
+			return temp;
+		}
+		else {
+			temp = temp->link;
+		}
+	}
+	return temp;
+}
+//New
 
 void SetCurrentCursorPos(int x, int y)
 {
@@ -73,7 +142,23 @@ int DetectCollision(int posX, int posY, char Map[][17][36]) {
 	return 1;
 }
 
-void Interface()				// 게임 전체 인터페이스를 그리는 함수
+//New
+void printList() {
+	LN* p;
+	COORD q;
+	int i;
+	p = L->head;
+	SetCurrentCursorPos(86, 3);
+	q = GetCurrentCursorPos();
+	while (p != NULL) {
+		printf("%s", MovableItem[currentRoomNumber][p->item]);
+		SetCurrentCursorPos(q.X, q.Y);
+		q.Y++;
+		p = p->link;
+	}
+}
+
+void Interface()            // 게임 전체 인터페이스를 그리는 함수
 {
 	int x, y;
 	//게임 실행 인터페이스
@@ -131,7 +216,6 @@ void Interface()				// 게임 전체 인터페이스를 그리는 함수
 		printf("─");
 	}
 	//메세지창 인터페이스 
-	
 	for (y = 0; y <= MBOARD_HEIGHT; y++)
 	{
 		SetCurrentCursorPos(MBOARD_ORIGIN_X, MBOARD_ORIGIN_Y + y);
@@ -162,8 +246,6 @@ void Interface()				// 게임 전체 인터페이스를 그리는 함수
 	//메세지 창 테스트
 	SetCurrentCursorPos(MBOARD_ORIGIN_X + 2, MBOARD_ORIGIN_Y + 1);
 	printf("Hello");
-	//printf("%d", Map[currentRoomNumber][player.X+1][player.Y+5]);
-	//printf("Hello");
 	/*SetCurrentCursorPos(MBOARD_ORIGIN_X + 2, MBOARD_ORIGIN_Y + 2);
 	printf("Hello");
 	SetCurrentCursorPos(MBOARD_ORIGIN_X + 2, MBOARD_ORIGIN_Y + 3);
@@ -198,8 +280,63 @@ void Interface()				// 게임 전체 인터페이스를 그리는 함수
 	{
 		messageBoardInfo[MBOARD_HEIGHT][x] = 1;
 	}
+}
 
-	//SetCurrentCursorPos(0, 0);
+//방 벽 그리는 함수
+void DrawRoomFrame(char Map[][17][36], int x, int y)
+{   //x=i, y=j
+
+	if (Map[currentRoomNumber][y][x + 1] == 1)
+	{
+		if (Map[currentRoomNumber][y][x - 1] == 1)
+		{
+			printf("─");
+		}
+		else if (Map[currentRoomNumber][y + 1][x] == 1)
+		{
+			printf("┌");
+		}
+		else if (Map[currentRoomNumber][y - 1][x] == 1)
+		{
+			printf("└");
+		}
+		else if (Map[currentRoomNumber][y][x - 1] == 0)
+		{
+			printf("─");
+		}
+	}
+
+	else if (Map[currentRoomNumber][y - 1][x] == 1 && Map[currentRoomNumber][y + 1][x] == 1)
+	{
+		printf("│");
+	}
+
+
+	else if (Map[currentRoomNumber][y][x - 1] == 1)
+	{
+		if (Map[currentRoomNumber][y + 1][x] == 1) {
+			printf("┐");
+		}
+		else if (Map[currentRoomNumber][y - 1][x] == 1)
+		{
+			printf("┘");
+		}
+		else if (Map[currentRoomNumber][y][x + 1] == 0)
+		{
+			printf("─");
+		}
+	}
+
+	else if (Map[currentRoomNumber][y - 1][x] == 0 && Map[currentRoomNumber][y + 1][x] == 1)
+	{
+		printf("│");
+	}
+	else if (Map[currentRoomNumber][y - 1][x] == 1 && Map[currentRoomNumber][y + 1][x] == 0)
+	{
+		printf("│");
+	}
+
+	else printf("■");
 }
 
 void DrawGameUI(char Map[][17][36])
@@ -207,13 +344,11 @@ void DrawGameUI(char Map[][17][36])
 	int i, j;
 	for (i = 0; i < 36; i++) {
 		for (j = 0; j < 17; j++) {
-			if (currentRoomNumber == 0)//튜토리얼
+			if (currentRoomNumber == 0)//나눈 이유: 그냥 한눈에 아이템뭐 있는지 보려고
 			{
 				if (Map[currentRoomNumber][j][i] == 1) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//여기!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111 
-					//블록 말고 선으로 수정하려면 빨리 9 어떻게 해결해야할 것 같음-서영
-					printf("■");
+					DrawRoomFrame(Map, i, j);
 				}
 				if (Map[currentRoomNumber][j][i] == 2) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
@@ -229,119 +364,87 @@ void DrawGameUI(char Map[][17][36])
 				}
 			}
 
-			if (currentRoomNumber == 4) //4번방
+			if (currentRoomNumber == 1)
 			{
 				if (Map[currentRoomNumber][j][i] == 1) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
 					//여기!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111 
-					printf("■");
+					DrawRoomFrame(Map, i, j);
 				}
-				if (Map[currentRoomNumber][j][i] == 2) {
-					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//수정!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					printf("Γ");
-				}
-				if (Map[currentRoomNumber][j][i] == 3) {
-					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					printf("●");
-				}
-				if (Map[currentRoomNumber][j][i] == 4) {
-					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
-					printf("◆");
-				}
-				if (Map[currentRoomNumber][j][i] == 5) {
-					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
-					printf("◆");
-				}
-				if (Map[currentRoomNumber][j][i] == 6) {
-					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
-					printf("◆");
-				}
-				if (Map[currentRoomNumber][j][i] == 7) {
-					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
-					printf("◆");
-				}
-				if (Map[currentRoomNumber][j][i] == 8) {
-					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
-					printf("◆");
-				}
-			}
-
-			if (currentRoomNumber == 5) //5번방
-			{
-				if (Map[currentRoomNumber][j][i] == 1) {
-					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//여기!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111 
-					printf("■");
-				}
-				if (Map[currentRoomNumber][j][i] == 2) {
+				if (Map[currentRoomNumber][j][i] == 12) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
 					//수정!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
 					printf("@");
 				}
-				if (Map[currentRoomNumber][j][i] == 3) {
+				if (Map[currentRoomNumber][j][i] == 13) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
 					printf("□");
 				}
-				if (Map[currentRoomNumber][j][i] == 4) {
+				if (Map[currentRoomNumber][j][i] == 3) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
 					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
 					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
-					printf("Ф");
-				}
-				if (Map[currentRoomNumber][j][i] == 5) {
-					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
-					printf("▩");
-				}
-				if (Map[currentRoomNumber][j][i] == 6) {
-					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
-					printf("▥");
-				}
-				if (Map[currentRoomNumber][j][i] == 10) {
-					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
-					printf("┌");
-				}
-				if (Map[currentRoomNumber][j][i] == 11) {
-					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
-					printf("─");
-				}
-				if (Map[currentRoomNumber][j][i] == 12) {
-					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
-					printf("┐");
-				}
-				if (Map[currentRoomNumber][j][i] == 13) {
-					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
-					printf("│");
+					printf("⊙");
 				}
 				if (Map[currentRoomNumber][j][i] == 14) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
 					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
 					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
-					printf("└");
+					printf("▩");
 				}
 				if (Map[currentRoomNumber][j][i] == 15) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
+					printf("▥");
+				}
+
+				if (Map[currentRoomNumber][j][i] == 4) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
+					printf("▤");
+				}
+
+				if (Map[currentRoomNumber][j][i] == 2) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
+					printf("★");
+				}
+
+
+				if (Map[currentRoomNumber][j][i] == 70) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
+					printf("┌");
+				}
+				if (Map[currentRoomNumber][j][i] == 71) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
+					printf("─");
+				}
+				if (Map[currentRoomNumber][j][i] == 72) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
+					printf("┐");
+				}
+				if (Map[currentRoomNumber][j][i] == 73) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
+					printf("│");
+				}
+				if (Map[currentRoomNumber][j][i] == 74) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
+					printf("└");
+				}
+				if (Map[currentRoomNumber][j][i] == 75) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
 					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
 					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
@@ -349,12 +452,331 @@ void DrawGameUI(char Map[][17][36])
 				}
 			}
 
-			if (currentRoomNumber == 7) //복도
+			if (currentRoomNumber == 2)
 			{
 				if (Map[currentRoomNumber][j][i] == 1) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//여기!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111 
-					printf("■");
+					DrawRoomFrame(Map, i, j);
+				}
+				if (Map[currentRoomNumber][j][i] == 24) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("Ω");
+				}
+				if (Map[currentRoomNumber][j][i] == 22) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("∮");
+				}
+				if (Map[currentRoomNumber][j][i] == 23) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("￥");
+				}
+				if (Map[currentRoomNumber][j][i] == 4) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("▩");
+				}
+				if (Map[currentRoomNumber][j][i] == 3) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("▤");
+				}
+
+				if (Map[currentRoomNumber][j][i] == 2) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("★");
+				}
+
+
+				if (Map[currentRoomNumber][j][i] == 70) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
+					printf("┌");
+				}
+				if (Map[currentRoomNumber][j][i] == 71) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
+					printf("─");
+				}
+				if (Map[currentRoomNumber][j][i] == 72) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
+					printf("┐");
+				}
+				if (Map[currentRoomNumber][j][i] == 73) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
+					printf("│");
+				}
+				if (Map[currentRoomNumber][j][i] == 74) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
+					printf("└");
+				}
+				if (Map[currentRoomNumber][j][i] == 75) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
+					printf("┘");
+				}
+			}
+
+			if (currentRoomNumber == 3)//나눈 이유: 그냥 한눈에 아이템뭐 있는지 보려고
+			{
+				if (Map[currentRoomNumber][j][i] == 1) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					DrawRoomFrame(Map, i, j);
+				}
+				if (Map[currentRoomNumber][j][i] == 72) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//수정!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					printf("┬");
+				}
+				if (Map[currentRoomNumber][j][i] == 73) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("─");
+				}
+				if (Map[currentRoomNumber][j][i] == 74) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("│");
+				}
+				if (Map[currentRoomNumber][j][i] == 75) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("┼");
+				}
+				if (Map[currentRoomNumber][j][i] == 76) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("┴");
+				}
+				if (Map[currentRoomNumber][j][i] == 7 || Map[currentRoomNumber][j][i] == 8) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("○");
+				}
+				if (Map[currentRoomNumber][j][i] == 3 || Map[currentRoomNumber][j][i] == 4 || Map[currentRoomNumber][j][i] == 5) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("▤");
+				}
+				if (Map[currentRoomNumber][j][i] == 6) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("ㆀ");
+				}
+			}
+
+			if (currentRoomNumber == 4) //갈래방
+			{
+				if (Map[currentRoomNumber][j][i] == 1) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					DrawRoomFrame(Map, i, j);
+				}
+				if (Map[currentRoomNumber][j][i] == 42) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("Γ");
+				}
+				if (Map[currentRoomNumber][j][i] == 43) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("●");
+				}
+				if (Map[currentRoomNumber][j][i] == 44) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("◆");
+				}
+				if (Map[currentRoomNumber][j][i] == 45) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("◆");
+				}
+				if (Map[currentRoomNumber][j][i] == 46) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("◆");
+				}
+				if (Map[currentRoomNumber][j][i] == 47) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("◆");
+				}
+				if (Map[currentRoomNumber][j][i] == 48) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("◆");
+				}
+			}
+
+			if (currentRoomNumber == 5)
+			{
+				if (Map[currentRoomNumber][j][i] == 1) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					DrawRoomFrame(Map, i, j);
+				}
+				if (Map[currentRoomNumber][j][i] == 54) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("@");
+				}
+				if (Map[currentRoomNumber][j][i] == 55) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("□");
+				}
+				if (Map[currentRoomNumber][j][i] == 52) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("ℓ");
+				}
+				if (Map[currentRoomNumber][j][i] == 53) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("Ф");
+				}
+				if (Map[currentRoomNumber][j][i] == 56) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("▩");
+				}
+				if (Map[currentRoomNumber][j][i] == 57) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("▥");
+				}
+
+				if (Map[currentRoomNumber][j][i] == 70) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("┌");
+				}
+				if (Map[currentRoomNumber][j][i] == 71) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("─");
+				}
+				if (Map[currentRoomNumber][j][i] == 72) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("┐");
+				}
+				if (Map[currentRoomNumber][j][i] == 73) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("│");
+				}
+				if (Map[currentRoomNumber][j][i] == 74) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("└");
+				}
+				if (Map[currentRoomNumber][j][i] == 75) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("┘");
+				}
+
+			}
+
+			if (currentRoomNumber == 6)
+			{
+				if (Map[currentRoomNumber][j][i] == 1) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					DrawRoomFrame(Map, i, j);
+				}
+				if (Map[currentRoomNumber][j][i] == 2) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//수정!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					printf("▤");
+				}
+				if (Map[currentRoomNumber][j][i] == 63) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("↖");
+				}
+				if (Map[currentRoomNumber][j][i] == 62) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
+					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
+					printf("☎");
+				}
+			}
+
+			if (currentRoomNumber == 7)
+			{
+				if (Map[currentRoomNumber][j][i] == 1) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("┌");
+				}
+				if (Map[currentRoomNumber][j][i] == 2) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("─");
+				}
+				if (Map[currentRoomNumber][j][i] == 3) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("┐");
+				}
+				if (Map[currentRoomNumber][j][i] == 4) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("│");
+				}
+				if (Map[currentRoomNumber][j][i] == 5) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("└");
+				}
+				if (Map[currentRoomNumber][j][i] == 6) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("┘");
+				}
+				if (Map[currentRoomNumber][j][i] == 7) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("┬");
+				}
+				if (Map[currentRoomNumber][j][i] == 8) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("├");
+				}
+				if (Map[currentRoomNumber][j][i] == 9) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("┤");
+				}
+				if (Map[currentRoomNumber][j][i] == 10) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("┴");
+				}
+
+			}
+
+			if (currentRoomNumber == 9)
+			{
+				if (Map[currentRoomNumber][j][i] == 1) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					DrawRoomFrame(Map, i, j);
+				}
+				if (Map[currentRoomNumber][j][i] == 92) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("@");
+				}
+				if (Map[currentRoomNumber][j][i] == 93) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("▤");
+				}
+				if (Map[currentRoomNumber][j][i] == 94) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("▩");
+				}
+				if (Map[currentRoomNumber][j][i] == 95) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("▥");
+				}
+
+				if (Map[currentRoomNumber][j][i] == 8) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("★");
+				}
+
+				if (Map[currentRoomNumber][j][i] == 70) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("┌");
+				}
+				if (Map[currentRoomNumber][j][i] == 71) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("─");
+				}
+				if (Map[currentRoomNumber][j][i] == 72) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("┐");
+				}
+				if (Map[currentRoomNumber][j][i] == 73) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("│");
+				}
+				if (Map[currentRoomNumber][j][i] == 74) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("└");
+				}
+				if (Map[currentRoomNumber][j][i] == 75) {
+					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
+					printf("┘");
 				}
 			}
 
@@ -362,8 +784,7 @@ void DrawGameUI(char Map[][17][36])
 			{
 				if (Map[currentRoomNumber][j][i] == 1) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//여기!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111 
-					printf("■");
+					DrawRoomFrame(Map, i, j);
 				}
 				if (Map[currentRoomNumber][j][i] == 2) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
@@ -397,14 +818,10 @@ void DrawGameUI(char Map[][17][36])
 				}
 				if (Map[currentRoomNumber][j][i] == 7) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
 					printf("┘");
 				}
 				if (Map[currentRoomNumber][j][i] == 8) {
 					SetCurrentCursorPos(GBOARD_ORIGIN_X + 9 + i * 2, GBOARD_ORIGIN_Y + 2 + j);
-					//필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111
-					//각 방마다 크기가 다르니 중앙에 배치하도록 수식을 넣을 예정입니당 -혜원
 					printf("┬");
 				}
 
@@ -417,7 +834,7 @@ void DeleteMap(int nextRoom) { //GBOARD에 출력된 내용을 전부 지운다.
 	int i, j;
 	COORD tmp;
 	char* playerICON = "▼";
-	
+
 	for (i = GBOARD_ORIGIN_X + 2; i < GBOARD_ORIGIN_X + 2 + GBOARD_WIDTH * 2; i++) {
 		for (j = GBOARD_ORIGIN_Y + 1; j < GBOARD_ORIGIN_Y + GBOARD_HEIGHT; j++) {
 			SetCurrentCursorPos(i, j);
@@ -425,7 +842,7 @@ void DeleteMap(int nextRoom) { //GBOARD에 출력된 내용을 전부 지운다.
 		}
 	}
 
-	//Sleep(10);	
+	//Sleep(10);   
 	if (nextRoom == 7) {
 		//각 방에서 복도로 이동
 		tmp.X = entrance_door[currentRoomNumber][0];
@@ -438,6 +855,10 @@ void DeleteMap(int nextRoom) { //GBOARD에 출력된 내용을 전부 지운다.
 		if (currentRoomNumber == 10 || currentRoomNumber == 6) {
 			tmp.X -= 2;
 			playerICON = "◀";
+		}
+		if (currentRoomNumber == 0) {
+			tmp.Y += 1;
+			playerICON = "▼";
 		}
 	}
 
@@ -468,15 +889,15 @@ void DeleteMap(int nextRoom) { //GBOARD에 출력된 내용을 전부 지운다.
 		tmp.X = exit_door[nextRoom][0];
 		tmp.Y = exit_door[nextRoom][1];
 
-		if (nextRoom == 0) {
+		if (nextRoom == 0 || nextRoom == 2 || nextRoom == 3) {
 			tmp.Y += 1;
 			playerICON = "▼";
 		}
-		if (nextRoom == 4 || nextRoom == 10) {
+		if (nextRoom == 4 || nextRoom == 6 || nextRoom == 10) {
 			tmp.Y -= 1;
 			playerICON = "▲";
 		}
-		if (nextRoom == 5) {
+		if (nextRoom == 1 || nextRoom == 5) {
 			tmp.X -= 2;
 			playerICON = "◀";
 		}
@@ -487,25 +908,25 @@ void DeleteMap(int nextRoom) { //GBOARD에 출력된 내용을 전부 지운다.
 	player.X = tmp.X;
 	player.Y = tmp.Y;
 	SetCurrentCursorPos(player.X, player.Y);
-	
+
 	printf("%s", playerICON);
 }
 
 void Check_exit_door() { //현재 플레이어의 위치가 방에서 나가는 좌표인지 검사
 
 	if ((player.X == exit_door[currentRoomNumber][0] && player.Y == exit_door[currentRoomNumber][1]) ||
-		(player.X == exit_door[currentRoomNumber][2] && player.Y == exit_door[currentRoomNumber][3])) 
+		(player.X == exit_door[currentRoomNumber][2] && player.Y == exit_door[currentRoomNumber][3]))
 	{
 		if (currentRoomNumber == 4 || currentRoomNumber == 5) DeleteMap(10);
 		else DeleteMap(7); //복도에서의 좌표를 설정해 줌
 	}
-	
+
 }
 
 void Check_entrance_door() { //현재 플레이어의 위치가 방으로 들어가는 좌표인지 검사
 	int room_num[5] = { 1, 2, 3, 10, 6 }; //복도에서 들어갈 수 있는 방 번호
 	int i;
-	
+
 	if (currentRoomNumber == 10) {
 		if ((player.X == entrance_door[4][0] && player.Y == entrance_door[4][1]) ||
 			(player.X == entrance_door[4][2] && player.Y == entrance_door[4][3])) {
@@ -528,12 +949,12 @@ void Check_entrance_door() { //현재 플레이어의 위치가 방으로 들어가는 좌표인지 �
 	}
 }
 
+
 void ShiftLeft()
 {
 	if (!DetectCollision(player.X - 2, player.Y, Map)) {
-		if (Map[currentRoomNumber][player.Y-4][(player.X-10-6)/2] != 1) {
+		if (Map[currentRoomNumber][player.X - 2][player.Y] != 1) {
 			//벽이 아니라 아이템에 부딪힐 경우, 시야의 방향 전환이 가능하도록 함.
-		//	printf("2 %d %d %d", Map[currentRoomNumber][player.Y - 4][(player.X - 10 - 4) / 2], player.Y-4, (player.X - 10 - 4) / 2);
 			SetCurrentCursorPos(player.X, player.Y);
 			printf("  ");
 			SetCurrentCursorPos(player.X, player.Y);
@@ -552,10 +973,8 @@ void ShiftLeft()
 void ShiftRight()
 {
 	if (!DetectCollision(player.X + 2, player.Y, Map)) {
-		//printf("1");
-		if (Map[currentRoomNumber][player.Y - 4][(player.X - 10 - 2)/2] != 1) {
+		if (Map[currentRoomNumber][player.X + 2][player.Y] != 1) {
 			//벽이 아니라 아이템에 부딪힐 경우, 시야의 방향 전환이 가능하도록 함.
-		//	printf(" 2");
 			SetCurrentCursorPos(player.X, player.Y);
 			printf("  ");
 			SetCurrentCursorPos(player.X, player.Y);
@@ -574,7 +993,7 @@ void ShiftRight()
 void ShiftUp()
 {
 	if (!DetectCollision(player.X, player.Y - 1, Map)) {
-		if (Map[currentRoomNumber][player.Y - 5][(player.X-10-4)/2] != 1) {
+		if (Map[currentRoomNumber][player.X][player.Y - 1] != 1) {
 			//벽이 아니라 아이템에 부딪힐 경우, 시야의 방향 전환이 가능하도록 함.
 			SetCurrentCursorPos(player.X, player.Y);
 			printf("  ");
@@ -594,7 +1013,7 @@ void ShiftUp()
 void ShiftDown()
 {
 	if (!DetectCollision(player.X, player.Y + 1, Map)) {
-		if (Map[currentRoomNumber][player.Y - 3][(player.X - 10 - 4) / 2] != 1) {
+		if (Map[currentRoomNumber][player.X][player.Y + 1] != 1) {
 			//벽이 아니라 아이템에 부딪힐 경우, 시야의 방향 전환이 가능하도록 함.
 			SetCurrentCursorPos(player.X, player.Y);
 			printf("  ");
@@ -610,9 +1029,84 @@ void ShiftDown()
 	printf("▼");
 }
 
+//New
+int GetItem(int item) {
+	int i, j;
+	for (i = 0; i < 17; i++) {
+		for (j = 0; j < 36; j++) {
+			if (Map[currentRoomNumber][i][j] == item) {
+				Map[currentRoomNumber][i][j] = 0;
+				DrawGameUI(Map);
+			}
+		}
+	}
+	insertNode(item);
+	//printList();
+}
+
+void UseItem(int M_item, int Im_item) {
+	LN* p;
+	MovableItem[currentRoomNumber][M_item - 3] = 2;
+	ImmovableItem[currentRoomNumber][Im_item - 2] = 1;
+	p = searchNode(M_item - 3);
+	if (p == NULL) {
+		printf("None");
+	}
+	else {
+		DeleteNode(p);
+	}
+	//printList();
+	printf("ok");
+}
+
+void Item_Dis() {
+	COORD p;
+	LN* lp;
+	int i, j, item;
+	p = GetCurrentCursorPos();
+	if (currentRoomNumber == 0) {
+		if ((p.X == 40 && p.Y == 8) || (p.X == 38 && p.Y == 9)) {
+			SetCurrentCursorPos(36, 8);
+			printf(" ");
+			item = 3;
+			for (i = 0; i < 17; i++) {
+				for (j = 0; j < 36; j++) {
+					if (Map[currentRoomNumber][i][j] == item) {
+						Map[currentRoomNumber][i][j] = 0;
+						DrawGameUI(Map);
+					}
+				}
+			}
+			insertNode(item - 3);
+			MovableItem[currentRoomNumber][0] = 1;
+
+			lp = L->head;
+			SetCurrentCursorPos(86, 3);
+			p = GetCurrentCursorPos();
+			while (lp != NULL) {
+				printf("%s", MovableItem_Name[currentRoomNumber][lp->item]);
+				SetCurrentCursorPos(p.X, p.Y);
+				p.Y++;
+				lp = lp->link;
+			}
+			//대사출력
+		}
+		else if ((p.X == 52 && p.Y == 11) || (p.X == 50 && p.Y == 12) || (p.X == 54 && p.Y == 12) || (p.X == 52 && p.Y == 13)) {
+			UseItem(3, 2);
+			GetItem(4); //1번방 열쇠
+			MovableItem[currentRoomNumber][1] = 1;
+		}
+	}
+	else if (currentRoomNumber == 1) {
+		printf("%d %d", p.X, p.Y);
+	}
+}
+
 void ProcessKeyInput()
 {
-	int key, i;
+	//int key = _getch();
+	int key;
+	int i;
 	for (i = 0; i < 1; i++)
 	{
 		key = _getch();
@@ -640,15 +1134,15 @@ int main()
 	system("mode con cols=112 lines=33"); //콘솔창 크기 조절: cols=칸/행(가로)   lines=줄/열(세로)
 	RemoveCursor();
 	GetCurrentCursorPos(player);
-	currentRoomNumber = 0; //현재 방 번호
+	//currentRoomNumber = 0; //현재 방 번호
 	DrawGameUI(Map);
 	SetCurrentCursorPos(player.X, player.Y);
 	printf("▲");
 	Interface();
-	
+
 	while (1) {
 		if (currentRoomNumber != 7) Check_exit_door();
-		if(currentRoomNumber==7 || currentRoomNumber==10) Check_entrance_door();
+		if (currentRoomNumber == 7 || currentRoomNumber == 10) Check_entrance_door();
 		ProcessKeyInput();
 	}
 	return 0;
