@@ -996,7 +996,7 @@ void Check_entrance_door() { //현재 플레이어의 위치가 방으로 들어
 void ShiftLeft()
 {
 	if (!DetectCollision(player.X - 2, player.Y, Map)) {
-		if (Map[currentRoomNumber][player.X - 2][player.Y] != 1) {
+		if (Map[currentRoomNumber][player.Y - GBOARD_ORIGIN_Y - 2][(player.X - 2 - GBOARD_ORIGIN_X - 9) / 2] != 1) {
 			//벽이 아니라 아이템에 부딪힐 경우, 시야의 방향 전환이 가능하도록 함.
 			SetCurrentCursorPos(player.X, player.Y);
 			printf("  ");
@@ -1016,7 +1016,7 @@ void ShiftLeft()
 void ShiftRight()
 {
 	if (!DetectCollision(player.X + 2, player.Y, Map)) {
-		if (Map[currentRoomNumber][player.X + 2][player.Y] != 1) {
+		if (Map[currentRoomNumber][player.Y - GBOARD_ORIGIN_Y - 2][(player.X+2 - GBOARD_ORIGIN_X - 9) / 2] != 1) {
 			//벽이 아니라 아이템에 부딪힐 경우, 시야의 방향 전환이 가능하도록 함.
 			SetCurrentCursorPos(player.X, player.Y);
 			printf("  ");
@@ -1036,7 +1036,7 @@ void ShiftRight()
 void ShiftUp()
 {
 	if (!DetectCollision(player.X, player.Y - 1, Map)) {
-		if (Map[currentRoomNumber][player.X][player.Y - 1] != 1) {
+		if (Map[currentRoomNumber][player.Y - 1 - GBOARD_ORIGIN_Y - 2][(player.X - GBOARD_ORIGIN_X - 9) / 2] != 1) {
 			//벽이 아니라 아이템에 부딪힐 경우, 시야의 방향 전환이 가능하도록 함.
 			SetCurrentCursorPos(player.X, player.Y);
 			printf("  ");
@@ -1056,7 +1056,7 @@ void ShiftUp()
 void ShiftDown()
 {
 	if (!DetectCollision(player.X, player.Y + 1, Map)) {
-		if (Map[currentRoomNumber][player.X][player.Y + 1] != 1) {
+		if (Map[currentRoomNumber][player.Y + 1 - GBOARD_ORIGIN_Y - 2][(player.X - GBOARD_ORIGIN_X - 9) / 2] != 1) {
 			//벽이 아니라 아이템에 부딪힐 경우, 시야의 방향 전환이 가능하도록 함.
 			SetCurrentCursorPos(player.X, player.Y);
 			printf("  ");
@@ -1378,6 +1378,9 @@ void mini_lock_door()
 						printf("=");
 						Sleep(500);
 					}
+					Map[4][13][18] = 1;
+					Map[4][13][17] = 1;
+
 					mini4_come = 1;
 					SetCurrentCursorPos(0, 0);
 				}
@@ -1402,6 +1405,8 @@ void mini_lock_door()
 					printf(" ");
 					Sleep(500);
 				}
+				Map[4][13][18] = 0;
+				Map[4][13][17] = 0;
 				mini4_disappear = 1;
 			}
 		}
